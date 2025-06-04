@@ -47,6 +47,8 @@ cargo build
 
 # Lancer un exemple
 cargo run --example use_with_csv
+cargo run --example use_pmc_from_csv -- src/data/pmc_dataset.csv
+
 
 # Exécuter les tests
 cargo test
