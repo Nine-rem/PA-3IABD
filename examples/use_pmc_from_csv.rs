@@ -1,30 +1,17 @@
-use pa_3a_iabd2::pmc::MLP;
-use std::env;
+use pa_3a_iabd2::lib::pmc::MLP;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let (x, y) = load_csv("src/data/pmc_results.csv");
 
-    if args.len() != 2 {
-        eprintln!("Usage : cargo run --example use_pmc_from_csv -- <chemin/vers/fichier.csv>");
-        return;
-    }
+    let mut mlp = MLP::new(&[x[0].len(), 3, 1]);
+    mlp.train(&x, &y, 0.1, 1000);
 
-    let path = &args[1];
-    let (x, y) = load_csv(path);
-
-    let input_size = x[0].len();
-    let hidden_size = input_size * 2;
-    let output_size = 1;
-
-    let mut model = MLP::new(&[input_size, hidden_size, output_size]);
-    model.train(&x, &y, 0.5, 3000);
-
-    println!("\n=== PMC dynamique sur {}", path);
+    println!("=== PMC Prédictions ===");
     for (xi, yi) in x.iter().zip(y.iter()) {
-        let pred = model.predict(xi)[0];
-        println!("Entrée: {:?} | Réel: {:.1} | Prédit: {:.4}", xi, yi[0], pred);
+        let out = mlp.predict(xi);
+        println!("Entrée: {:?} | Réel: {:.1} | Prédit: {:.4}", xi, yi[0], out[0]);
     }
 }
 
