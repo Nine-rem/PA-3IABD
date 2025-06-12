@@ -1,1 +1,40 @@
-/target
+# 🔒 Empêche de versionner l’environnement virtuel
+env/
+.venv/
+
+# 📦 Fichiers de dépendances Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# 📓 Fichiers générés par Jupyter
+.ipynb_checkpoints/
+*.nbconvert.ipynb
+
+# 🧪 Dossiers de tests / résultats temporaires
+tests/__pycache__/
+*.log
+*.tmp
+*.out
+*.dat
+
+# 📈 Sorties de matplotlib ou autres visualisations
+*.png
+*.svg
+*.pdf
+
+# 📦 Environnement de build Rust
+target/
+Cargo.lock
+
+# 💻 Configs IDE
+.vscode/
+.idea/
+
+# 📄 Config système
+.DS_Store
+Thumbs.db
+
+# ⚙️ Fichier de configuration personnel
+.env
