@@ -1,11 +1,12 @@
 [package]
-name = "PA-3A-IABD2"
+name = "iabd2_pa"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
-name = "pa_3a_iabd2"
-path = "src/lib/mod.rs"
-
-
 [dependencies]
+csv = "1.1"
+rand = "0.8"
+
+
+
+
