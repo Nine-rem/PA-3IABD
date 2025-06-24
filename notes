@@ -1,0 +1,10 @@
+
+
+lancer venv : source py_env/Scripts/activate
+
+questions, est ce ok d'utiliser :
+maturin # rust <-> python
+ndarray # Manipulation de matrices
+rand  # Aléatoire
+serde 
+ron # Sauvegarde/chargement de modèles 

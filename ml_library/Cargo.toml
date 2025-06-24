@@ -1,0 +1,18 @@
+[package]
+name = "ml_library"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ndarray = "0.15"               # Manipulation de matrices
+rand = "0.8"                   # Aléatoire
+serde = { version = "1.0", features = ["derive"] }
+ron = "0.8"                    # Sauvegarde/chargement de modèles
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies.pyo3]
+version = "0.20"
+features = ["extension-module"]
+
