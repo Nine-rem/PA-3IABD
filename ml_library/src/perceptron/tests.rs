@@ -1,15 +1,12 @@
 #[cfg(test)]
 mod tests {
-    use crate::linear::{model::LinearModel, train::train_linear};
-    
+    use crate::perceptron::{model::Perceptron, train::train_perceptron};
+
     #[test]
-    fn test_linear_simple() {
-        // Dataset simple
+    fn test_perceptron_simple() {
         let X = vec![vec![1.0, 1.0], vec![2.0, 3.0], vec![3.0, 3.0]];
         let Y = vec![1.0, -1.0, -1.0];
-        // Entraînement
-        let model: LinearModel = train_linear(&X, &Y, 1000, 0.1);
-        // Vérification des prédictions
+        let mut model: Perceptron = train_perceptron(&X, &Y, 1000, 0.1);
         for (x, &y_true) in X.iter().zip(Y.iter()) {
             let pred = model.predict(x);
             assert_eq!(pred, y_true);
@@ -17,7 +14,7 @@ mod tests {
     }
 
     #[test]
-    fn test_linear_multiple() {
+    fn test_perceptron_multiple() {
         let mut X = Vec::new();
         let mut Y = Vec::new();
         for _ in 0..50 {
@@ -30,7 +27,7 @@ mod tests {
                         rand::random::<f64>() * 0.9 + 2.0]);
             Y.push(-1.0);
         }
-        let model: LinearModel = train_linear(&X, &Y, 1000, 0.1);
+        let mut model: Perceptron = train_perceptron(&X, &Y, 1000, 0.1);
         for (x, &y_true) in X.iter().zip(Y.iter()) {
             let pred = model.predict(x);
             assert_eq!(pred, y_true);
@@ -39,25 +36,25 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_linear_xor() {
-        // Non adapté: le modèle linéaire ne peut pas séparer le XOR.
+    fn test_perceptron_xor() {
+        // Non adapté: le perceptron Rosenblatt ne résout pas le XOR.
     }
 
     #[test]
     #[ignore]
-    fn test_linear_cross() {
-        // Non adapté: le modèle linéaire ne peut pas capturer la structure en croix non linéaire.
+    fn test_perceptron_cross() {
+        // Non adapté: la structure en croix n'est pas linéairement séparable.
     }
 
     #[test]
     #[ignore]
-    fn test_linear_multi_three_classes() {
-        // Non adapté: besoin d'un classifieur multiclasse ou de plusieurs séparateurs.
+    fn test_perceptron_multi_three_classes() {
+        // Non adapté: perceptron binaire uniquement.
     }
 
     #[test]
     #[ignore]
-    fn test_linear_multi_cross() {
-        // Non adapté: le modèle linéaire ne gère pas la complexité de distribution multi-croix.
+    fn test_perceptron_multi_cross() {
+        // Non adapté: perceptron binaire ne gère pas multi-croix.
     }
 }
