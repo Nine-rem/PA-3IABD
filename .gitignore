@@ -1,1 +1,58 @@
-target/
+# ======================
+# Environnements Python (si utilisés)
+# ======================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Envs virtuels
+env/
+venv/
+.venv/
+.env/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Logs et sorties
+*.log
+*.out
+
+# ======================
+# Rust
+# ======================
+# Dossier de build Cargo
+/target/
+/**/*.rs.bk
+
+# Cargo.lock (à versionner pour les binaires ; décommentez si vous êtes en librairie)
+// Cargo.lock
+
+# ======================
+# IDE & éditeurs
+# ======================
+# VS Code
+.vscode/
+
+# IntelliJ / CLion / PyCharm / Rider
+.idea/
+*.iml
+
+# Visual Studio
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ======================
+# Divers
+# ======================
+# macOS
+.DS_Store
+
+# Linux
+*~
+
+# Windows
+Thumbs.db
+Desktop.ini
