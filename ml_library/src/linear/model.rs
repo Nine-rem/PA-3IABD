@@ -1,4 +1,5 @@
-//régression continue
+use crate::common::math::dot_product;
+
 pub struct LinearModel {
     pub weights: Vec<f64>,
 }
@@ -6,15 +7,16 @@ pub struct LinearModel {
 impl LinearModel {
     pub fn new(n_features: usize) -> Self {
         Self {
-            weights: vec![0.0; n_features + 1], // biais + poids
+            weights: vec![0.0; n_features + 1],
         }
     }
 
     pub fn predict(&self, input: &[f64]) -> f64 {
-        self.weights[0] + self.weights[1..]
-            .iter()
-            .zip(input.iter())
-            .map(|(w, x)| w * x)
-            .sum::<f64>()
+        assert_eq!(
+            input.len() + 1,
+            self.weights.len(),
+            "input.len()+1 must equal weights.len()"
+        );
+        self.weights[0] + dot_product(&self.weights[1..], input)
     }
 }

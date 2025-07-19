@@ -5,7 +5,7 @@ pub struct Perceptron {
     pub learning_rate: f64,
 }
 
-impl Perceptron { // Init perceptron à n_features
+impl Perceptron { 
     
     pub fn new(n_features: usize, learning_rate: f64) -> Self {
         let mut rng = rand::thread_rng();
@@ -17,6 +17,9 @@ impl Perceptron { // Init perceptron à n_features
 
     /// Prédit +1 ou -1
     pub fn predict(&self, input: &[f64]) -> f64 {
+        // Vérifie qu’on a bien un poids de biais + un par feature
+        assert_eq!(input.len() + 1, self.weights.len(),
+            "input.len()+1 doit == weights.len()");
         let sum = self.weights[0] + self.weights[1..]
             .iter()
             .zip(input)

@@ -1,5 +1,3 @@
 pub mod model;
 pub mod train;
-
-#[cfg(test)]
-mod tests;
+pub mod tests;

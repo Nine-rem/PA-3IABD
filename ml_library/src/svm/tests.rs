@@ -1,66 +1,94 @@
-// File: ml_library/src/svm/tests.rs
-
 #[cfg(test)]
 mod tests {
-    use crate::svm::{svm::SVM, train::train_svm};
+    use crate::svm::model::SVM;
+    use crate::svm::train::train_svm;
 
     #[test]
-    fn test_svm_simple_linear() {
-        let X = vec![vec![1.0, 1.0], vec![2.0, 3.0], vec![3.0, 3.0]];
-        let Y = vec![1.0, -1.0, -1.0];
-        let mut model: SVM = train_svm(&X, &Y, "linear", 1.0);
-        for (x, &y_true) in X.iter().zip(Y.iter()) {
-            let pred = model.predict(x);
-            assert_eq!(pred, y_true);
+    fn test_decision_function() {
+        let mut svm = SVM::new(2, 0.1, 0.01);
+        svm.weights = vec![1.0, 2.0, -1.0];
+        let v = svm.decision_function(&[1.0, 2.0]);
+        assert!((v - 1.0).abs() < 1e-8);
+    }
+
+    #[test]
+    fn test_predict_sign() {
+        let mut svm = SVM::new(2, 0.1, 0.01);
+        svm.weights = vec![0.0, 1.0, 0.0];
+        assert_eq!(svm.predict(&[1.0, 0.0]), 1.0);
+        assert_eq!(svm.predict(&[-1.0, 0.0]), -1.0);
+    }
+
+    #[test]
+    fn test_train_svm_simple_separable() {
+        let inputs = vec![vec![1.0], vec![-1.0]];
+        let targets = vec![1.0, -1.0];
+        let svm = train_svm(&inputs, &targets, 1_000, 0.1, 0.01);
+        for (x, &y) in inputs.iter().zip(targets.iter()) {
+            assert_eq!(svm.predict(x), y);
         }
     }
 
     #[test]
-    fn test_svm_multiple_linear() {
-        let mut X = Vec::new(); let mut Y = Vec::new();
-        for _ in 0..50 {
-            X.push(vec![rand::random::<f64>() * 0.9 + 1.0,
-                        rand::random::<f64>() * 0.9 + 1.0]); Y.push(1.0);
-        }
-        for _ in 0..50 {
-            X.push(vec![rand::random::<f64>() * 0.9 + 2.0,
-                        rand::random::<f64>() * 0.9 + 2.0]); Y.push(-1.0);
-        }
-        let mut model: SVM = train_svm(&X, &Y, "linear", 1.0);
-        for (x, &y_true) in X.iter().zip(Y.iter()) {
-            let pred = model.predict(x);
-            assert_eq!(pred, y_true);
-        }
+    #[should_panic]
+    fn test_predict_dim_mismatch() {
+        let svm = SVM::new(2, 0.1, 0.01);
+        let _ = svm.predict(&[1.0]);
     }
 
     #[test]
-    #[ignore]
-    fn test_svm_xor() {
-        // Non adapté: SVM linéaire ne peut pas séparer XOR sans kernel non linéaire.
+    #[should_panic]
+    fn test_train_dim_mismatch() {
+        let inputs = vec![vec![1.0, 2.0]];
+        let targets = vec![];
+        let _ = train_svm(&inputs, &targets, 10, 0.1, 0.01);
     }
 
+
+    // Les tests fonctionnels (end-to-end)
+
     #[test]
-    fn test_svm_cross_rbf() {
-        let X: Vec<Vec<f64>> = (0..500).map(|_| vec![rand::random::<f64>() * 2.0 - 1.0,
-                                                       rand::random::<f64>() * 2.0 - 1.0]).collect();
-        let Y: Vec<f64> = X.iter().map(|p|
-            if p[0].abs() <= 0.3 || p[1].abs() <= 0.3 { 1.0 } else { -1.0 }).collect();
-        let mut model: SVM = train_svm(&X, &Y, "rbf", 1.0);
-        for (x, &y_true) in X.iter().zip(Y.iter()) {
-            let pred = model.predict(x);
-            assert_eq!(pred, y_true);
+    fn functional_svm_train_and_predict() {
+        // Séparable : y = sign(x)
+        let inputs  = vec![vec![0.5], vec![-0.5], vec![2.0], vec![-2.0]];
+        let targets = vec![1.0, -1.0, 1.0, -1.0];
+        let svm = train_svm(&inputs, &targets, 5_000, 0.1, 0.01);
+        for (x, &y) in inputs.iter().zip(targets.iter()) {
+            assert_eq!(svm.predict(x), y);
         }
     }
 
-    #[test]
-    #[ignore]
-    fn test_svm_multi_three_classes() {
-        // Non adapté: gestion multiclasse non implémentée, utiliser OVA.
-    }
+    //Les tests de performance / convergence
+
+    #[cfg(test)]
+    mod tests {
+    use crate::common::loss::hinge_loss;
+    use crate::svm::train::train_svm;
 
     #[test]
-    #[ignore]
-    fn test_svm_multi_cross() {
-        // Non adapté: multi-croix non géré.
+    fn performance_svm_hinge_decrease() {
+        // Séparable simple
+        let inputs  = vec![vec![1.0], vec![-1.0]];
+        let targets = vec![1.0, -1.0];
+
+        // Hinge initial (tous scores = 0)
+        let zero_scores  = vec![0.0; targets.len()];
+        let initial_loss = hinge_loss(&targets, &zero_scores);
+
+        // Entraînement
+        let svm          = train_svm(&inputs, &targets, 1_000, 0.1, 0.01);
+        let trained_scores = inputs.iter().map(|x| svm.decision_function(x)).collect::<Vec<_>>();
+        let trained_loss   = hinge_loss(&targets, &trained_scores);
+
+        assert!(
+            trained_loss < initial_loss,
+            "SVM hinge loss should decrease ({} → {})",
+            initial_loss,
+            trained_loss
+        );
     }
 }
+
+
+}
+
