@@ -9,7 +9,8 @@ pub fn train_linear(
     learning_rate: f64,
 ) -> LinearModel {
     let n_features = inputs[0].len();
-    let mut model = LinearModel::new(n_features);
+    let mut model = LinearModel::new_rust(n_features);
+
 
     for _ in 0..epochs {
         // 1) Calcul des prédictions

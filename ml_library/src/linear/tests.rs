@@ -40,7 +40,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_predict_dim_mismatch() {
-        let model = LinearModel::new(2);
+        let model = LinearModel::new_rust(2);
         let _ = model.predict(&[1.0]); // input length != 2
     }
 

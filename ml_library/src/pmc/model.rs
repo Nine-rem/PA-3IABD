@@ -1,10 +1,10 @@
+use pyo3::prelude::*;
 use rand::Rng;
 use crate::common::activations::tanh;
 
-/// Représente une couche du MLP
 #[derive(Debug)]
 pub struct Layer {
-    pub weights: Vec<Vec<f64>>, // [n_inputs+1][n_neurons]
+    pub weights: Vec<Vec<f64>>,
     pub outputs: Vec<f64>,
     pub deltas: Vec<f64>,
 }
@@ -25,16 +25,11 @@ impl Layer {
         }
     }
 
-    /// Forward pass sur la couche : tanh(w·x + b)
-    pub fn forward(&mut self, inputs: &[f64]) -> Vec<f64> {
-        assert_eq!(inputs.len() + 1, self.weights.len(),
-            "inputs.len()+1 must equal weights.len()");
+    pub fn forward(&mut self, inputs: &Vec<f64>) -> Vec<f64> {
         let bias_row = &self.weights[inputs.len()];
         let mut out = vec![0.0; self.outputs.len()];
         for j in 0..out.len() {
-            // biais
             let mut sum = bias_row[j];
-            // somme pondérée
             for (i, &x) in inputs.iter().enumerate() {
                 sum += x * self.weights[i][j];
             }
@@ -45,23 +40,19 @@ impl Layer {
     }
 }
 
-/// MLP complet
-#[derive(Debug)]
+#[pyclass]
 pub struct MLP {
     pub layers: Vec<Layer>,
     pub learning_rate: f64,
 }
 
+#[pymethods]
 impl MLP {
-    pub fn new(
-        n_inputs: usize,
-        hidden_sizes: &[usize],
-        n_outputs: usize,
-        learning_rate: f64,
-    ) -> Self {
+    #[new]
+    pub fn new_py(n_inputs: usize, hidden_sizes: Vec<usize>, n_outputs: usize, learning_rate: f64) -> Self {
         let mut layers = Vec::new();
         let mut prev = n_inputs;
-        for &h in hidden_sizes {
+        for &h in &hidden_sizes {
             layers.push(Layer::new(prev, h));
             prev = h;
         }
@@ -69,17 +60,22 @@ impl MLP {
         Self { layers, learning_rate }
     }
 
-    /// Forward complet (modifie les .outputs de chaque couche)
-    pub fn forward(&mut self, input: &[f64]) -> Vec<f64> {
-        let mut activation = input.to_vec();
+    pub fn predict(&mut self, input: Vec<f64>) -> Vec<f64> {
+        let mut activation = input;
         for layer in &mut self.layers {
             activation = layer.forward(&activation);
         }
         activation
     }
+}
 
-    /// Alias sans effet de bord supplémentaire
-    pub fn predict(&mut self, input: &[f64]) -> Vec<f64> {
-        self.forward(input)
+// Rust-only impl
+impl MLP {
+    pub fn predict_internal(&mut self, input: &[f64]) -> Vec<f64> {
+        let mut activation = input.to_vec();
+        for layer in &mut self.layers {
+            activation = layer.forward(&activation);
+        }
+        activation
     }
 }

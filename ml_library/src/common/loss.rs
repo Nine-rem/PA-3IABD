@@ -1,4 +1,6 @@
-// src/loss.rs
+use pyo3::prelude::*;
+use pyo3::exceptions::PyValueError;
+use pyo3::wrap_pyfunction;
 
 /// Erreur quadratique moyenne (MSE).
 /// Utilisée pour la régression et comme fonction de coût dans un PMC.
@@ -40,8 +42,8 @@ pub fn binary_cross_entropy_derivative(y_true: &[f64], y_pred: &[f64]) -> Vec<f6
     y_true.iter()
           .zip(y_pred.iter())
           .map(|(&t, &p)| {
-              // d/dp [ -t ln p - (1-t) ln(1-p) ] = -(t/p) + ((1-t)/(1-p))
               let p = p.clamp(eps, 1.0 - eps);
+              // d/dp [-t ln p - (1-t) ln(1-p)] = -(t/p) + ((1-t)/(1-p))
               ( -t / p + (1.0 - t) / (1.0 - p) ) / (y_true.len() as f64)
           })
           .collect()
@@ -68,4 +70,78 @@ pub fn hinge_loss_derivative(y_true: &[f64], y_pred: &[f64]) -> Vec<f64> {
               if 1.0 - t * p > 0.0 { -t / (y_true.len() as f64) } else { 0.0 }
           })
           .collect()
+}
+
+//
+// Wrappers PyO3
+//
+
+/// mse(y_true: List[float], y_pred: List[float]) -> float
+#[pyfunction(name = "mse")]
+fn mse_py(y_true: Vec<f64>, y_pred: Vec<f64>) -> PyResult<f64> {
+    if y_true.len() != y_pred.len() {
+        return Err(PyValueError::new_err(format!(
+            "length mismatch: y_true.len() = {}, y_pred.len() = {}",
+            y_true.len(),
+            y_pred.len()
+        )));
+    }
+    Ok(mse(&y_true, &y_pred))
+}
+
+/// mse_derivative(y_true: List[float], y_pred: List[float]) -> List[float]
+#[pyfunction(name = "mse_derivative")]
+fn mse_derivative_py(y_true: Vec<f64>, y_pred: Vec<f64>) -> PyResult<Vec<f64>> {
+    if y_true.len() != y_pred.len() {
+        return Err(PyValueError::new_err("length mismatch between y_true and y_pred"));
+    }
+    Ok(mse_derivative(&y_true, &y_pred))
+}
+
+/// binary_cross_entropy(y_true: List[float], y_pred: List[float]) -> float
+#[pyfunction(name = "binary_cross_entropy")]
+fn binary_cross_entropy_py(y_true: Vec<f64>, y_pred: Vec<f64>) -> PyResult<f64> {
+    if y_true.len() != y_pred.len() {
+        return Err(PyValueError::new_err("length mismatch between y_true and y_pred"));
+    }
+    Ok(binary_cross_entropy(&y_true, &y_pred))
+}
+
+/// binary_cross_entropy_derivative(y_true: List[float], y_pred: List[float]) -> List[float]
+#[pyfunction(name = "binary_cross_entropy_derivative")]
+fn binary_cross_entropy_derivative_py(y_true: Vec<f64>, y_pred: Vec<f64>) -> PyResult<Vec<f64>> {
+    if y_true.len() != y_pred.len() {
+        return Err(PyValueError::new_err("length mismatch between y_true and y_pred"));
+    }
+    Ok(binary_cross_entropy_derivative(&y_true, &y_pred))
+}
+
+/// hinge_loss(y_true: List[float], y_pred: List[float]) -> float
+#[pyfunction(name = "hinge_loss")]
+fn hinge_loss_py(y_true: Vec<f64>, y_pred: Vec<f64>) -> PyResult<f64> {
+    if y_true.len() != y_pred.len() {
+        return Err(PyValueError::new_err("length mismatch between y_true and y_pred"));
+    }
+    Ok(hinge_loss(&y_true, &y_pred))
+}
+
+/// hinge_loss_derivative(y_true: List[float], y_pred: List[float]) -> List[float]
+#[pyfunction(name = "hinge_loss_derivative")]
+fn hinge_loss_derivative_py(y_true: Vec<f64>, y_pred: Vec<f64>) -> PyResult<Vec<f64>> {
+    if y_true.len() != y_pred.len() {
+        return Err(PyValueError::new_err("length mismatch between y_true and y_pred"));
+    }
+    Ok(hinge_loss_derivative(&y_true, &y_pred))
+}
+
+/// point d’entrée du sous-module Python `common.loss`
+#[pymodule]
+pub fn loss(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(mse_py, m)?)?;
+    m.add_function(wrap_pyfunction!(mse_derivative_py, m)?)?;
+    m.add_function(wrap_pyfunction!(binary_cross_entropy_py, m)?)?;
+    m.add_function(wrap_pyfunction!(binary_cross_entropy_derivative_py, m)?)?;
+    m.add_function(wrap_pyfunction!(hinge_loss_py, m)?)?;
+    m.add_function(wrap_pyfunction!(hinge_loss_derivative_py, m)?)?;
+    Ok(())
 }

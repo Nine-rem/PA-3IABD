@@ -1,62 +1,41 @@
-/// Petite tolérance pour comparaison de flottants (plus réaliste que EPSILON).
-const TOLERANCE: f64 = 1e-6;
+use pyo3::prelude::*;
+use pyo3::exceptions::PyValueError;
+use pyo3::wrap_pyfunction;
 
-/// Accuracy (taux de classification correcte).
-/// Suppose que y_true et y_pred contiennent des classes 0.0 ou 1.0.
-pub fn accuracy(y_true: &[f64], y_pred: &[f64]) -> f64 {
-    assert_eq!(y_true.len(), y_pred.len());
-    let correct = y_true
-        .iter().copied()
-        .zip(y_pred.iter().copied())
-        .filter(|&(t, p)| (t - p).abs() < TOLERANCE)
-        .count();
+/// Taux de bonnes prédictions (accuracy).
+pub fn accuracy_score(y_true: &[f64], y_pred: &[f64]) -> f64 {
+    if y_true.len() != y_pred.len() {
+        panic!(
+            "Mismatched lengths in accuracy_score: {} vs {}",
+            y_true.len(),
+            y_pred.len()
+        );
+    }
+    let mut correct = 0;
+    for i in 0..y_true.len() {
+        if y_true[i] == y_pred[i] {
+            correct += 1;
+        }
+    }
     correct as f64 / y_true.len() as f64
 }
 
-/// Accuracy avec un seuil (utile pour sorties sigmoïdes).
-pub fn accuracy_threshold(y_true: &[f64], y_pred: &[f64], threshold: f64) -> f64 {
-    assert_eq!(y_true.len(), y_pred.len());
-    let correct = y_true
-        .iter().copied()
-        .zip(y_pred.iter().copied())
-        .filter(|&(t, p)| {
-            let pred = if p >= threshold { 1.0 } else { 0.0 };
-            (t - pred).abs() < TOLERANCE
-        })
-        .count();
-    correct as f64 / y_true.len() as f64
-}
 
-/// Mean Squared Error (MSE).
-pub fn mse(y_true: &[f64], y_pred: &[f64]) -> f64 {
-    assert_eq!(y_true.len(), y_pred.len());
-    y_true
-        .iter().copied()
-        .zip(y_pred.iter().copied())
-        .map(|(t, p)| (t - p).powi(2))
-        .sum::<f64>()
-        / y_true.len() as f64
-}
-
-/// Mean Absolute Error (MAE).
-pub fn mae(y_true: &[f64], y_pred: &[f64]) -> f64 {
-    assert_eq!(y_true.len(), y_pred.len());
-    y_true
-        .iter().copied()
-        .zip(y_pred.iter().copied())
-        .map(|(t, p)| (t - p).abs())
-        .sum::<f64>()
-        / y_true.len() as f64
-}
-
-/// Precision (TP / (TP + FP)).
-pub fn precision(y_true: &[f64], y_pred: &[f64]) -> f64 {
-    assert_eq!(y_true.len(), y_pred.len());
+pub fn precision_score(y_true: &[f64], y_pred: &[f64]) -> f64 {
+    if y_true.len() != y_pred.len() {
+        panic!(
+            "Mismatched lengths in precision_score: {} vs {}",
+            y_true.len(),
+            y_pred.len()
+        );
+    }
     let mut tp = 0;
     let mut fp = 0;
-    for (t, p) in y_true.iter().copied().zip(y_pred.iter().copied()) {
-        if p > 0.5 {
-            if t > 0.5 {
+    for i in 0..y_true.len() {
+        let t = y_true[i];
+        let p = y_pred[i];
+        if p == 1.0 {
+            if t == 1.0 {
                 tp += 1;
             } else {
                 fp += 1;
@@ -70,14 +49,22 @@ pub fn precision(y_true: &[f64], y_pred: &[f64]) -> f64 {
     }
 }
 
-/// Recall (TP / (TP + FN)).
-pub fn recall(y_true: &[f64], y_pred: &[f64]) -> f64 {
-    assert_eq!(y_true.len(), y_pred.len());
+
+pub fn recall_score(y_true: &[f64], y_pred: &[f64]) -> f64 {
+    if y_true.len() != y_pred.len() {
+        panic!(
+            "Mismatched lengths in recall_score: {} vs {}",
+            y_true.len(),
+            y_pred.len()
+        );
+    }
     let mut tp = 0;
     let mut fn_ = 0;
-    for (t, p) in y_true.iter().copied().zip(y_pred.iter().copied()) {
-        if t > 0.5 {
-            if p > 0.5 {
+    for i in 0..y_true.len() {
+        let t = y_true[i];
+        let p = y_pred[i];
+        if t == 1.0 {
+            if p == 1.0 {
                 tp += 1;
             } else {
                 fn_ += 1;
@@ -91,13 +78,75 @@ pub fn recall(y_true: &[f64], y_pred: &[f64]) -> f64 {
     }
 }
 
-/// F1-score = 2 * (Precision * Recall) / (Precision + Recall).
+/// F1‐score pour la classe positive.
 pub fn f1_score(y_true: &[f64], y_pred: &[f64]) -> f64 {
-    let p = precision(y_true, y_pred);
-    let r = recall(y_true, y_pred);
-    if (p + r).abs() < TOLERANCE {
+    let prec = precision_score(y_true, y_pred);
+    let rec = recall_score(y_true, y_pred);
+    if prec + rec == 0.0 {
         0.0
     } else {
-        2.0 * (p * r) / (p + r)
+        2.0 * prec * rec / (prec + rec)
     }
+}
+
+
+#[pyfunction]
+fn accuracy_score_py(y_true: Vec<f64>, y_pred: Vec<f64>) -> PyResult<f64> {
+    if y_true.len() != y_pred.len() {
+        return Err(PyValueError::new_err(format!(
+            "length mismatch: y_true.len() = {}, y_pred.len() = {}",
+            y_true.len(),
+            y_pred.len()
+        )));
+    }
+    Ok(accuracy_score(&y_true, &y_pred))
+}
+
+/// precision_score(y_true: List[float], y_pred: List[float]) -> float
+#[pyfunction]
+fn precision_score_py(y_true: Vec<f64>, y_pred: Vec<f64>) -> PyResult<f64> {
+    if y_true.len() != y_pred.len() {
+        return Err(PyValueError::new_err(format!(
+            "length mismatch: y_true.len() = {}, y_pred.len() = {}",
+            y_true.len(),
+            y_pred.len()
+        )));
+    }
+    Ok(precision_score(&y_true, &y_pred))
+}
+
+/// recall_score(y_true: List[float], y_pred: List[float]) -> float
+#[pyfunction]
+fn recall_score_py(y_true: Vec<f64>, y_pred: Vec<f64>) -> PyResult<f64> {
+    if y_true.len() != y_pred.len() {
+        return Err(PyValueError::new_err(format!(
+            "length mismatch: y_true.len() = {}, y_pred.len() = {}",
+            y_true.len(),
+            y_pred.len()
+        )));
+    }
+    Ok(recall_score(&y_true, &y_pred))
+}
+
+/// f1_score(y_true: List[float], y_pred: List[float]) -> float
+#[pyfunction]
+fn f1_score_py(y_true: Vec<f64>, y_pred: Vec<f64>) -> PyResult<f64> {
+    if y_true.len() != y_pred.len() {
+        return Err(PyValueError::new_err(format!(
+            "length mismatch: y_true.len() = {}, y_pred.len() = {}",
+            y_true.len(),
+            y_pred.len()
+        )));
+    }
+    Ok(f1_score(&y_true, &y_pred))
+}
+
+/// point d’entrée du sous‐module Python `common.metrics`
+#[pymodule]
+pub fn metrics(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(accuracy_score_py, m)?)?;
+    m.add_function(wrap_pyfunction!(precision_score_py, m)?)?;
+    m.add_function(wrap_pyfunction!(recall_score_py, m)?)?;
+    m.add_function(wrap_pyfunction!(f1_score_py, m)?)?;
+    Ok(())
 }

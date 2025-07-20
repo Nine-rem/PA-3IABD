@@ -16,14 +16,14 @@ pub fn train_svm(
     );
 
     let n_features = inputs[0].len();
-    let mut model = SVM::new(n_features, learning_rate, lambda);
+    let mut model = SVM::new_py(n_features, learning_rate, lambda);
     let mut rng = thread_rng();
 
     for _ in 0..iterations {
         let idx = rng.gen_range(0..inputs.len());
         let x = &inputs[idx];
         let y = targets[idx];
-        let margin = y * model.decision_function(x);
+        let margin = y * model.decision_function(x.clone());
 
         let η = model.learning_rate;
         let λ = model.lambda;

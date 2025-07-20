@@ -1,15 +1,38 @@
 use crate::common::math::{dot_product, sub_vectors};
 use nalgebra::{DMatrix, DVector};
+use pyo3::prelude::*;
 
 /// Réseau RBF simple
+#[pyclass]
 pub struct RBFN {
     pub centers: Vec<Vec<f64>>,
     pub weights: Vec<f64>,
     pub gamma: f64,
 }
 
+#[pymethods]
 impl RBFN {
-    /// Crée un RBFN non entraîné
+    #[new]
+    pub fn new_py(centers: Vec<Vec<f64>>, gamma: f64) -> Self {
+        assert!(!centers.is_empty(), "Il faut au moins un centre");
+        let weights = vec![0.0; centers.len()];
+        Self { centers, weights, gamma }
+    }
+
+    /// Fonction RBF utilisable côté Python
+    pub fn rbf(&self, x: Vec<f64>, center: Vec<f64>) -> f64 {
+        self.rbf_internal(&x, &center)
+    }
+
+    /// Prédiction utilisable côté Python
+    pub fn predict(&self, x: Vec<f64>) -> f64 {
+        self.predict_internal(&x)
+    }
+}
+
+// --- Implémentations Rust-only ---
+impl RBFN {
+    /// Constructeur utilisable en Rust
     pub fn new(centers: Vec<Vec<f64>>, gamma: f64) -> Self {
         assert!(!centers.is_empty(), "Il faut au moins un centre");
         let weights = vec![0.0; centers.len()];
@@ -17,7 +40,7 @@ impl RBFN {
     }
 
     /// Fonction RBF gaussienne
-    pub fn rbf(&self, x: &[f64], center: &[f64]) -> f64 {
+    pub fn rbf_internal(&self, x: &[f64], center: &[f64]) -> f64 {
         assert_eq!(x.len(), center.len(), "Dim(x) doit == Dim(center)");
         let diff = sub_vectors(x, center);
         let dist2 = dot_product(&diff, &diff);
@@ -25,11 +48,11 @@ impl RBFN {
     }
 
     /// Calcule la sortie pour une entrée donnée
-    pub fn predict(&self, x: &[f64]) -> f64 {
+    pub fn predict_internal(&self, x: &[f64]) -> f64 {
         assert_eq!(x.len(), self.centers[0].len(), "Dim(x) incohérente");
         self.centers.iter()
             .zip(&self.weights)
-            .map(|(c, w)| w * self.rbf(x, c))
+            .map(|(c, w)| w * self.rbf_internal(x, c))
             .sum()
     }
 
@@ -41,7 +64,7 @@ impl RBFN {
 
         for i in 0..n_samples {
             for j in 0..n_centers {
-                phi[(i, j)] = self.rbf(&inputs[i], &self.centers[j]);
+                phi[(i, j)] = self.rbf_internal(&inputs[i], &self.centers[j]);
             }
         }
         phi
@@ -49,7 +72,6 @@ impl RBFN {
 
     /// Applique les poids calculés (W = (Φᵀ Φ)⁻¹ Φᵀ Y)
     pub fn fit_weights(&mut self, phi: &DMatrix<f64>, y: &DVector<f64>) {
-        // Optionnel : vérifier dims
         assert_eq!(phi.nrows(), y.len(), "φ.rows doit == y.len()");
         let gram = phi.transpose() * phi;
         let inv = gram.clone()

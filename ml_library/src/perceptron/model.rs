@@ -1,13 +1,16 @@
 use rand::Rng;
+use pyo3::prelude::*;
 
+#[pyclass]
 pub struct Perceptron {
     pub weights: Vec<f64>,
     pub learning_rate: f64,
 }
 
+#[pymethods]
 impl Perceptron { 
-    
-    pub fn new(n_features: usize, learning_rate: f64) -> Self {
+    #[new]
+    pub fn new_rust(n_features: usize, learning_rate: f64) -> Self {
         let mut rng = rand::thread_rng();
         let weights = (0..=n_features)
             .map(|_| rng.gen_range(-1.0..1.0))
@@ -16,7 +19,7 @@ impl Perceptron {
     }
 
     /// Prédit +1 ou -1
-    pub fn predict(&self, input: &[f64]) -> f64 {
+    pub fn predict(&self, input: Vec<f64>) -> f64 {
         // Vérifie qu’on a bien un poids de biais + un par feature
         assert_eq!(input.len() + 1, self.weights.len(),
             "input.len()+1 doit == weights.len()");
@@ -28,3 +31,5 @@ impl Perceptron {
         if sum >= 0.0 { 1.0 } else { -1.0 }
     }
 }
+
+

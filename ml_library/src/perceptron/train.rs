@@ -11,14 +11,14 @@ pub fn train_perceptron(
     // Vérifie les dimensions d’entrée
     assert_eq!(inputs.len(), targets.len(),
         "inputs.len() doit == targets.len()");
-    let mut model = Perceptron::new(inputs[0].len(), learning_rate);
+    let mut model = Perceptron::new_rust(inputs[0].len(), learning_rate);
     let mut rng = rand::thread_rng();
 
     for _ in 0..iterations {
         let idx = rng.gen_range(0..inputs.len());
         let x = &inputs[idx];
         let y_true = targets[idx];
-        let y_pred = model.predict(x);
+        let y_pred = model.predict(x.clone());
         let error = y_true - y_pred;
 
         if error != 0.0 {

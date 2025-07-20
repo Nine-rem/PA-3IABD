@@ -5,18 +5,18 @@ mod tests {
 
     #[test]
     fn test_decision_function() {
-        let mut svm = SVM::new(2, 0.1, 0.01);
+        let mut svm = SVM::new_py(2, 0.1, 0.01);
         svm.weights = vec![1.0, 2.0, -1.0];
-        let v = svm.decision_function(&[1.0, 2.0]);
+        let v = svm.decision_function(vec![1.0, 2.0]);
         assert!((v - 1.0).abs() < 1e-8);
     }
 
     #[test]
     fn test_predict_sign() {
-        let mut svm = SVM::new(2, 0.1, 0.01);
+        let mut svm = SVM::new_py(2, 0.1, 0.01);
         svm.weights = vec![0.0, 1.0, 0.0];
-        assert_eq!(svm.predict(&[1.0, 0.0]), 1.0);
-        assert_eq!(svm.predict(&[-1.0, 0.0]), -1.0);
+        assert_eq!(svm.predict(vec![1.0, 0.0]), 1.0);
+        assert_eq!(svm.predict(vec![-1.0, 0.0]), -1.0);
     }
 
     #[test]
@@ -25,15 +25,15 @@ mod tests {
         let targets = vec![1.0, -1.0];
         let svm = train_svm(&inputs, &targets, 1_000, 0.1, 0.01);
         for (x, &y) in inputs.iter().zip(targets.iter()) {
-            assert_eq!(svm.predict(x), y);
+            assert_eq!(svm.predict(x.clone()), y);
         }
     }
 
     #[test]
     #[should_panic]
     fn test_predict_dim_mismatch() {
-        let svm = SVM::new(2, 0.1, 0.01);
-        let _ = svm.predict(&[1.0]);
+        let svm = SVM::new_py(2, 0.1, 0.01);
+        let _ = svm.predict(vec![1.0]);
     }
 
     #[test]
@@ -54,7 +54,7 @@ mod tests {
         let targets = vec![1.0, -1.0, 1.0, -1.0];
         let svm = train_svm(&inputs, &targets, 5_000, 0.1, 0.01);
         for (x, &y) in inputs.iter().zip(targets.iter()) {
-            assert_eq!(svm.predict(x), y);
+            assert_eq!(svm.predict(x.clone()), y);
         }
     }
 
@@ -77,7 +77,7 @@ mod tests {
 
         // Entraînement
         let svm          = train_svm(&inputs, &targets, 1_000, 0.1, 0.01);
-        let trained_scores = inputs.iter().map(|x| svm.decision_function(x)).collect::<Vec<_>>();
+        let trained_scores = inputs.iter().map(|x| svm.decision_function(x.clone())).collect::<Vec<_>>();
         let trained_loss   = hinge_loss(&targets, &trained_scores);
 
         assert!(

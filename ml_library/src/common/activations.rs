@@ -1,4 +1,5 @@
-// src/activations.rs
+use pyo3::prelude::*;
+use pyo3::wrap_pyfunction;
 
 /// Fonction sigmoïde.
 pub fn sigmoid(x: f64) -> f64 {
@@ -6,7 +7,6 @@ pub fn sigmoid(x: f64) -> f64 {
 }
 
 /// Dérivée de la sigmoïde à partir de la sortie sigmoïde.
-/// (Évite de recalculer `sigmoid(x)`).
 pub fn sigmoid_derivative_from_output(s: f64) -> f64 {
     s * (1.0 - s)
 }
@@ -42,4 +42,68 @@ pub fn softmax(xs: &[f64]) -> Vec<f64> {
     let exps: Vec<f64> = xs.iter().map(|&x| (x - max).exp()).collect();
     let sum: f64 = exps.iter().sum();
     exps.into_iter().map(|e| e / sum).collect()
+}
+
+// —————— Wrappers PyO3 ——————
+
+/// sigmoïde(x)
+#[pyfunction(name = "sigmoid")]
+fn sigmoid_py(x: f64) -> PyResult<f64> {
+    Ok(sigmoid(x))
+}
+
+/// sigmoid_derivative_from_output(s)
+#[pyfunction(name = "sigmoid_derivative_from_output")]
+fn sigmoid_derivative_from_output_py(s: f64) -> PyResult<f64> {
+    Ok(sigmoid_derivative_from_output(s))
+}
+
+/// tanh(x)
+#[pyfunction(name = "tanh")]
+fn tanh_py(x: f64) -> PyResult<f64> {
+    Ok(tanh(x))
+}
+
+/// tanh_derivative(x)
+#[pyfunction(name = "tanh_derivative")]
+fn tanh_derivative_py(x: f64) -> PyResult<f64> {
+    Ok(tanh_derivative(x))
+}
+
+/// relu(x)
+#[pyfunction(name = "relu")]
+fn relu_py(x: f64) -> PyResult<f64> {
+    Ok(relu(x))
+}
+
+/// relu_derivative(x)
+#[pyfunction(name = "relu_derivative")]
+fn relu_derivative_py(x: f64) -> PyResult<f64> {
+    Ok(relu_derivative(x))
+}
+
+/// sign(x)
+#[pyfunction(name = "sign")]
+fn sign_py(x: f64) -> PyResult<f64> {
+    Ok(sign(x))
+}
+
+/// softmax(list[float])
+#[pyfunction(name = "softmax")]
+fn softmax_py(xs: Vec<f64>) -> PyResult<Vec<f64>> {
+    Ok(softmax(&xs))
+}
+
+/// point d’entrée du sous-module Python `common.activations`
+#[pymodule]
+pub fn activations(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(sigmoid_py, m)?)?;
+    m.add_function(wrap_pyfunction!(sigmoid_derivative_from_output_py, m)?)?;
+    m.add_function(wrap_pyfunction!(tanh_py, m)?)?;
+    m.add_function(wrap_pyfunction!(tanh_derivative_py, m)?)?;
+    m.add_function(wrap_pyfunction!(relu_py, m)?)?;
+    m.add_function(wrap_pyfunction!(relu_derivative_py, m)?)?;
+    m.add_function(wrap_pyfunction!(sign_py, m)?)?;
+    m.add_function(wrap_pyfunction!(softmax_py, m)?)?;
+    Ok(())
 }
