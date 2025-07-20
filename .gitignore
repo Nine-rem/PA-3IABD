@@ -22,7 +22,7 @@ venv/
 # Rust
 # ======================
 # Dossier de build Cargo
-/target/
+*ml_library/target/*
 /**/*.rs.bk
 
 # Cargo.lock (à versionner pour les binaires ; décommentez si vous êtes en librairie)
