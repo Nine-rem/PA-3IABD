@@ -1,66 +1,79 @@
-use crate::common::math::dot_product;
-use crate::pmc::model::MLP;
+use crate::pmc::model::PMC;
+use rand::Rng;
 
-/// Back-propagation : calcule tous les `layer.deltas`
-fn backward_propagation(network: &mut MLP, expected: &[f64]) {
-    let last = network.layers.len() - 1;
-    // dérivée de tanh à partir de la sortie : 1 - s²
-    let out_layer = &mut network.layers[last];
-    for j in 0..out_layer.outputs.len() {
-        let err = expected[j] - out_layer.outputs[j];
-        out_layer.deltas[j] = err * (1.0 - out_layer.outputs[j].powi(2));
-    }
-
-    // couches cachées
-    for l in (0..last).rev() {
-        let (left, right) = network.layers.split_at_mut(l + 1);
-        let layer = &mut left[l];
-        let next = &right[0];
-        for i in 0..layer.outputs.len() {
-            // Σ_j w_{i→j} * δ_j
-            let err = dot_product(&next.weights[i], &next.deltas);
-            layer.deltas[i] = err * (1.0 - layer.outputs[i].powi(2));
-        }
-    }
-}
-
-/// Met à jour les poids en utilisant les `deltas` déjà calculés
-fn update_weights(network: &mut MLP, input: &[f64]) {
-    let mut activations = input.to_vec();
-    for layer in &mut network.layers {
-        // poids connexions
-        for i in 0..activations.len() {
-            for j in 0..layer.outputs.len() {
-                layer.weights[i][j] += network.learning_rate * layer.deltas[j] * activations[i];
-            }
-        }
-        // biais (dernière ligne de weights)
-        let bias_row = layer.weights.len() - 1;
-        for j in 0..layer.outputs.len() {
-            layer.weights[bias_row][j] += network.learning_rate * layer.deltas[j];
-        }
-        activations = layer.outputs.clone();
-    }
-}
-
-/// Entraînement MLP par batch-stochastique
-pub fn train_mlp(
+/// Entraîne un perceptron multiclasses (one-vs-rest).
+/// - `inputs`: vecteurs de caractéristiques
+/// - `targets`: indices de classes (0..n_classes-1)
+/// - `iterations`: nb d’itérations stochastiques
+/// - `learning_rate`: pas d’apprentissage
+/// Panique si dimensions invalides.
+pub fn train_pmc(
     inputs: &[Vec<f64>],
-    targets: &[Vec<f64>],
-    hidden_sizes: &[usize],
-    n_outputs: usize,
+    targets: &[usize],
     iterations: usize,
     learning_rate: f64,
-) -> MLP {
-    assert_eq!(inputs.len(), targets.len(),
-        "inputs.len() must equal targets.len()");
-    let mut net = MLP::new(inputs[0].len(), hidden_sizes, n_outputs, learning_rate);
+) -> PMC {
+    let n_samples = inputs.len();
+    assert_eq!(
+        n_samples,
+        targets.len(),
+        "train_pmc: inputs.len() ({}) doit == targets.len() ({})",
+        n_samples,
+        targets.len()
+    );
+    let n_features = inputs[0].len();
+    for x in inputs {
+        assert_eq!(
+            x.len(),
+            n_features,
+            "train_pmc: chaque vecteur a {} features, trouvé {}",
+            n_features,
+            x.len()
+        );
+    }
+
+    // Nombre de classes
+    let n_classes = *targets.iter().max().unwrap_or(&0) + 1;
+    let mut rng = rand::thread_rng();
+
+    // Initialiser poids (biais + features) pour chaque classe
+    let mut weights: Vec<Vec<f64>> = (0..n_classes)
+        .map(|_| vec![0.0; n_features + 1])
+        .collect();
+
+    // Perceptron stochastique one-vs-rest
     for _ in 0..iterations {
-        for (x, y) in inputs.iter().zip(targets.iter()) {
-            net.forward(x);
-            backward_propagation(&mut net, y);
-            update_weights(&mut net, x);
+        let i = rng.gen_range(0..n_samples);
+        let x = &inputs[i];
+        let y_true = targets[i];
+
+        // Calcul scores
+        let scores: Vec<f64> = weights
+            .iter()
+            .map(|w| w[0] + w[1..]
+                .iter()
+                .zip(x)
+                .map(|(wi, xi)| wi * xi)
+                .sum::<f64>())
+            .collect();
+
+        // Prédiction = argmax
+        let y_pred = scores
+            .iter()
+            .enumerate()
+            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .unwrap()
+            .0;
+
+        // Mise à jour si erreur
+        if y_pred != y_true {
+            for j in 0..=n_features {
+                let xi = if j == 0 { 1.0 } else { x[j - 1] };
+                weights[y_true][j] += learning_rate * xi;
+                weights[y_pred][j] -= learning_rate * xi;
+            }
         }
     }
-    net
+
+    PMC { weights }
 }

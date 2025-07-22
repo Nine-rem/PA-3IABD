@@ -1,38 +1,64 @@
+// src/linear/train.rs
+
+use std::slice;
+use nalgebra::{DMatrix, DVector};
 use crate::linear::model::LinearModel;
-use crate::common::loss::mse_derivative;
 
-/// Entraîne un modèle linéaire par descente de gradient sur la MSE (batch).
-pub fn train_linear(
-    inputs: &[Vec<f64>],
-    targets: &[f64],
-    epochs: usize,
-    learning_rate: f64,
-) -> LinearModel {
-    let n_features = inputs[0].len();
-    let mut model = LinearModel::new(n_features);
+/// Perceptron binaire exposé à ctypes.
+#[no_mangle]
+pub extern "C" fn train_perceptron_binary(
+    ptr_x: *const f64,
+    ptr_y: *const f64,
+    n_samples: usize,
+    n_features: usize,
+    lr: f64,
+    n_iters: usize,
+    out_weights: *mut f64,
+) {
+    let x_slice = unsafe { slice::from_raw_parts(ptr_x, n_samples * n_features) };
+    let y_slice = unsafe { slice::from_raw_parts(ptr_y, n_samples) };
+    let x = DMatrix::from_row_slice(n_samples, n_features, x_slice);
+    let y = DVector::from_row_slice(y_slice);
+    let model = LinearModel::perceptron_binary(&x, &y, lr, n_iters);
+    let w = model.weights.as_slice();
+    unsafe { std::ptr::copy_nonoverlapping(w.as_ptr(), out_weights, w.len()); }
+}
 
-    for _ in 0..epochs {
-        // 1) Calcul des prédictions
-        let preds: Vec<f64> = inputs.iter()
-            .map(|x| model.predict(x))
-            .collect();
+/// Perceptron multi‑classe exposé à ctypes.
+#[no_mangle]
+pub extern "C" fn train_perceptron_multiclass(
+    ptr_x: *const f64,
+    ptr_y: *const f64,
+    n_samples: usize,
+    n_features: usize,
+    n_classes: usize,
+    lr: f64,
+    n_iters: usize,
+    out_weights: *mut f64,
+) {
+    let x_slice = unsafe { slice::from_raw_parts(ptr_x, n_samples * n_features) };
+    let y_slice = unsafe { slice::from_raw_parts(ptr_y, n_samples * n_classes) };
+    let x = DMatrix::from_row_slice(n_samples, n_features, x_slice);
+    let y_onehot = DMatrix::from_row_slice(n_samples, n_classes, y_slice);
+    let model = LinearModel::perceptron_multiclass(&x, &y_onehot, lr, n_iters);
+    let w = model.weights.as_slice();
+    unsafe { std::ptr::copy_nonoverlapping(w.as_ptr(), out_weights, w.len()); }
+}
 
-        // 2) Dérivée de la MSE : ∂L/∂y_pred pour chaque échantillon
-        let grads = mse_derivative(targets, &preds);
-
-        // 3) Mise à jour du biais : -lr * ∑ᵢ ∂L/∂y_predᵢ
-        let grad_b: f64 = grads.iter().sum();
-        model.weights[0] -= learning_rate * grad_b;
-
-        // 4) Mise à jour des poids : -lr * ∑ᵢ (∂L/∂y_predᵢ * xᵢⱼ)
-        for j in 0..n_features {
-            let grad_wj: f64 = inputs.iter()
-                .zip(grads.iter())
-                .map(|(x, &g)| g * x[j])
-                .sum();
-            model.weights[j + 1] -= learning_rate * grad_wj;
-        }
-    }
-
-    model
+/// Régression linéaire (OLS) exposée à ctypes.
+#[no_mangle]
+pub extern "C" fn train_regression(
+    ptr_x: *const f64,
+    ptr_y: *const f64,
+    n_samples: usize,
+    n_features: usize,
+    out_weights: *mut f64,
+) {
+    let x_slice = unsafe { slice::from_raw_parts(ptr_x, n_samples * n_features) };
+    let y_slice = unsafe { slice::from_raw_parts(ptr_y, n_samples) };
+    let x = DMatrix::from_row_slice(n_samples, n_features, x_slice);
+    let y = DVector::from_row_slice(y_slice);
+    let model = LinearModel::regression_ols(&x, &y);
+    let w = model.weights.as_slice();
+    unsafe { std::ptr::copy_nonoverlapping(w.as_ptr(), out_weights, w.len()); }
 }

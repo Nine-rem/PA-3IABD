@@ -54,3 +54,8 @@ Par exemple : créer un dataset très simple et vérifier que tous tes modèles 
 
 C’est ce que tu fais déjà avec les tests.rs de RBFN et SVM (mais ça reste des tests fonctionnels).
 
+
+
+cas de test :
+
+Le problème vient de la descente de gradient non normalisée : vos gradients sont trop gros (vous n’avez pas divisé par le nombre d’échantillons), du coup pour le cas colinéaire [1,1],[2,2],[3,3] ça diverge au lieu de converge
