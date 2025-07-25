@@ -1,5 +1,3 @@
-// src/linear/train.rs
-
 use std::slice;
 use nalgebra::{DMatrix, DVector};
 use crate::linear::model::LinearModel;

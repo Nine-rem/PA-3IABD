@@ -2,6 +2,8 @@
 
 lancer venv : .\.venv\Scripts\Activate
 
+python tests/cas_de_test_linear.py
+
 questions, est ce ok d'utiliser :
 dans mon cargo :
 maturin # rust <-> python
@@ -10,7 +12,7 @@ rand  # Aléatoire
 serde 
 ron # Sauvegarde/chargement de modèles 
 
-
+FFI wrapers
 
 test unitaires : (cargo test)
 

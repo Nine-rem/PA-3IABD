@@ -1,5 +1,3 @@
-# cas_de_test_linear.py
-
 import os
 import sys
 import ctypes
@@ -7,10 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-# ----------------------------------------
-# Chargement de la librairie Rust compilée
-# ----------------------------------------
-crate_root = os.path.dirname(os.path.dirname(__file__))  # .../ml_library/
+
+# load la lib Rust compilée
+crate_root = os.path.dirname(os.path.dirname(__file__))  
 if sys.platform.startswith("win"):
     lib_name = "ml_library.dll"
 elif sys.platform == "darwin":
@@ -21,9 +18,7 @@ else:
 lib_path = os.path.join(crate_root, "target", "debug", lib_name)
 lib = ctypes.CDLL(lib_path)
 
-# ----------------------------------------
 # Signatures ctypes
-# ----------------------------------------
 lib.train_perceptron_binary.argtypes = [
     np.ctypeslib.ndpointer(ctypes.c_double, flags="C_CONTIGUOUS"),
     np.ctypeslib.ndpointer(ctypes.c_double, flags="C_CONTIGUOUS"),
@@ -50,9 +45,7 @@ lib.train_regression.argtypes = [
 ]
 lib.train_regression.restype = None
 
-# ----------------------------------------
 # Wrappers Python
-# ----------------------------------------
 def train_perceptron_binary(X, Y, lr=0.01, n_iters=1000):
     n, d = X.shape
     W = np.zeros(d+1, dtype=np.float64)
@@ -87,13 +80,11 @@ def train_regression(X, Y):
     )
     return W
 
-# ----------------------------------------
 # Fonctions de tracé
-# ----------------------------------------
 def plot_classification(X, Y, train_fn, multiclass=False, title=""):
     plt.figure()
 
-    # 1) Fond : grille centrée AUTOUR des nuages de points
+    # 1) Fond : grille centrée autour des nuages de points
     x_min, x_max = X[:,0].min() - 0.5, X[:,0].max() + 0.5
     y_min, y_max = X[:,1].min() - 0.5, X[:,1].max() + 0.5
     grid = np.array([
@@ -122,7 +113,7 @@ def plot_classification(X, Y, train_fn, multiclass=False, title=""):
         marker='.', zorder=0
     )
 
-    # 2) Points originaux par‑dessus
+    # 2) Points originaux par dessus
     if multiclass:
         for idx, color, label in zip(range(Y.shape[1]),
                                      ['blue','red','green'],
@@ -178,9 +169,7 @@ def plot_regression(X, Y, title="", is3d=False):
     plt.title(title)
     plt.show()
 
-# ----------------------------------------
 # Batteries de tests 
-# ----------------------------------------
 # 1. Classification – Linear Simple
 X1 = np.array([[1,1], [2,3], [3,3]])
 Y1 = np.array([1, -1, -1])
