@@ -1,4 +1,3 @@
-// src/math.rs
 
 /// Produit scalaire entre deux vecteurs.
 pub fn dot_product(a: &[f64], b: &[f64]) -> f64 {

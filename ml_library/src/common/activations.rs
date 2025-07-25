@@ -1,4 +1,3 @@
-// src/activations.rs
 
 /// Fonction sigmoïde.
 pub fn sigmoid(x: f64) -> f64 {

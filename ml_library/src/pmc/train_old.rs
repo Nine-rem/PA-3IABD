@@ -1,4 +1,5 @@
-/*use crate::common::model::{Matrix, ModelError, Vector};
+/*
+use crate::common::model::{Matrix, ModelError, Vector};
 use crate::linear::LinearModel;
 use crate::pmc::PMC;
 use rand::{SeedableRng, seq::SliceRandom};

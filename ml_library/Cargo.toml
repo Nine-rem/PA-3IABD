@@ -14,7 +14,3 @@ nalgebra = "0.32"
 [lib]
 crate-type = ["cdylib", "rlib"]
 name = "ml_library"
-
-[dependencies.pyo3]
-version = "0.20"
-features = ["extension-module"]

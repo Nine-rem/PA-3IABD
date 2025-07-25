@@ -1,9 +1,8 @@
-// src/linear/model.rs
 
 use nalgebra::{DMatrix, DVector};
 use nalgebra::linalg::SVD;
 
-/// Modèle linéaire générique : classification binaire, multi‑classe ou régression
+/// Modèle linéaire : classification binaire, multi‑classe ou régression
 pub struct LinearModel {
     pub weights: DMatrix<f64>,  // 1×(d+1) ou K×(d+1)
 }

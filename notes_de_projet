@@ -1,0 +1,70 @@
+lancer venv : .\.venv\Scripts\Activate
+
+python tests/cas_de_test_linear.py
+python tests/cas_de_test_pmc.py
+
+Les tests avec les modeles implémentés, ne sont pas opérationnels pour l instant,
+Donc on va faire les graphiques et les experimentations des modeles sur le dataset avec un autre pmc ( fonctionnel)
+
+pmc : test 1 , 2 ,4 passes
+
+on va utiliser ctype pour lier Rust et Python
+ou des FFI wrappers
+
+questions, est ce ok d'utiliser :
+dans mon cargo :
+maturin # rust <-> python
+ndarray # Manipulation de matrices
+rand  # Aléatoire
+serde 
+ron # Sauvegarde/chargement de modèles 
+
+FFI wrapers
+
+test unitaires : (cargo test)
+
+Ce que font ces tests
+
+Perceptron : Vérifie que predict fonctionne selon des poids connus.
+
+MLP : Vérifie sigmoid et forward sur un réseau aux poids fixés.
+
+RBFN : Vérifie rbf et compute_phi (dimensions et valeurs).
+
+SVM : Vérifie decision_function et predict pour des poids définis.
+
+
+
+
+
+1. Les tests unitaires (logique interne)
+Vérifient que chaque fonction de base (comme predict, forward, activation, decision_function, etc.) se comporte correctement.
+
+Exemple : vérifier que predict renvoie bien +1 ou -1 pour le Perceptron selon un poids donné.
+
+But : Détecter rapidement les bugs dans le cœur des calculs.
+
+2. Les tests fonctionnels (end-to-end)
+Vérifient que l’entraînement sur un petit dataset produit un modèle qui classifie correctement les données d’entraînement.
+
+Exemple : après train_svm sur un dataset linéairement séparable, predict doit donner les bonnes étiquettes.
+
+But : S'assurer que l’intégration des étapes d’apprentissage et de prédiction fonctionne.
+
+3. Les tests de performance / convergence (facultatifs)
+Vérifier que la perte diminue au fil des itérations.
+
+Exemple : Entraîner un MLP sur XOR et vérifier que l'erreur finale est < 0.01.
+
+But : Tester le comportement attendu sur un problème connu.
+
+4. Tests automatiques sur jeux jouets
+Par exemple : créer un dataset très simple et vérifier que tous tes modèles arrivent à l’apprendre.
+
+C’est ce que tu fais déjà avec les tests.rs de RBFN et SVM (mais ça reste des tests fonctionnels).
+
+
+
+cas de test :
+
+Le problème vient de la descente de gradient non normalisée : vos gradients sont trop gros (vous n’avez pas divisé par le nombre d’échantillons), du coup pour le cas colinéaire [1,1],[2,2],[3,3] ça diverge au lieu de converge

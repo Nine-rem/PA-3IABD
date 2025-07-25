@@ -15,7 +15,7 @@ else:
 
 # Chemin vers la bibliothèque compilée
 root = os.path.abspath(os.path.join(os.path.dirname(__file__), "ml_library"))
-lib_path = os.path.join(root, "target", "debug", lib_fname)
+lib_path = os.path.join(root, "target", "release", lib_fname)
 print(">>> Library path:", lib_path, "exists?", os.path.exists(lib_path))
 
 if not os.path.exists(lib_path):
@@ -24,7 +24,7 @@ if not os.path.exists(lib_path):
 lib = ctypes.CDLL(lib_path)
 
 # Test simple de la fonction train_pmc
-print("🧪 Test simple de train_pmc")
+print(" Test simple de train_pmc")
 
 # Signature FFI
 lib.train_pmc.argtypes = [
@@ -65,8 +65,8 @@ try:
         weights_out
     )
     
-    print("✅ Fonction train_pmc appelée avec succès!")
+    print("V/ Fonction train_pmc appelée avec succès!")
     print(f"Poids retournés: {weights_out[:10]}...")  # Afficher les 10 premiers
     
 except Exception as e:
-    print(f"❌ Erreur lors du test: {e}")
+    print(f"X Erreur lors du test: {e}")

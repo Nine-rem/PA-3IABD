@@ -1,4 +1,4 @@
-/*  tests/toy.rs
+/*  
 
 use ml_library::linear::train::train_linear;
 use ml_library::perceptron::train::train_perceptron;

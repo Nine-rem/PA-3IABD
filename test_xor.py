@@ -126,11 +126,11 @@ def test_xor():
     print(f"\nAccuracy: {accuracy:.1%}")
     
     if accuracy >= 1.0:
-        print("🎉 XOR résolu parfaitement!")
+        print("V/ XOR résolu parfaitement!")
     elif accuracy >= 0.75:
-        print("✅ XOR résolu avec succès!")
+        print("V/ XOR résolu avec succès!")
     else:
-        print("❌ XOR non résolu.")
+        print("X XOR non résolu.")
         
     return accuracy >= 0.75
 

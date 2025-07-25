@@ -198,17 +198,17 @@ if __name__ == "__main__":
         try:
             success = test_func()
             results.append((test_name, success))
-            print(f"✅ {test_name}: {'RÉUSSI' if success else 'ÉCHOUÉ'}")
+            print(f"V/ {test_name}: {'RÉUSSI' if success else 'ÉCHOUÉ'}")
         except Exception as e:
-            print(f"❌ {test_name}: ERREUR - {e}")
+            print(f"X {test_name}: ERREUR - {e}")
             results.append((test_name, False))
     
     print("\n" + "=" * 50)
-    print("📊 Résultats finaux:")
+    print("res : Résultats finaux:")
     successes = sum(1 for _, success in results if success)
     print(f"{successes}/{len(results)} tests réussis")
     
     if successes == len(results):
-        print("🎉 Toutes les améliorations fonctionnent correctement!")
+        print("V/ Toutes les améliorations fonctionnent correctement!")
     else:
-        print("⚠️  Certains tests ont échoué, vérifiez l'implémentation.")
+        print("X  Certains tests ont échoué, vérifiez l'implémentation.")

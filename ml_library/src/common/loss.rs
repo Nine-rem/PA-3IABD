@@ -1,4 +1,3 @@
-// src/loss.rs
 
 /// Erreur quadratique moyenne (MSE).
 /// Utilisée pour la régression et comme fonction de coût dans un PMC.

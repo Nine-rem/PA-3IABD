@@ -1,4 +1,3 @@
-// src/perceptron/tests.rs
 
 #[cfg(test)]
 mod tests {

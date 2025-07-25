@@ -1,4 +1,4 @@
-// ml_library/tests/cas_de_test_svm.rs
+
 
 use ml_library::svm::train::train_svm;
 

@@ -1,4 +1,3 @@
-// ml_library/tests/cas_de_test_rbfn.rs
 
 use ml_library::rbfn::train::train_rbfn;
 

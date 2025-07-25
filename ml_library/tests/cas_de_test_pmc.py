@@ -16,9 +16,9 @@ elif platform.system() == "Darwin":
 else:
     lib_fname = f"lib{CRATE_NAME}.so"
 
-# chemin absolu vers target/debug
+# chemin absolu vers target/release
 root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-lib_path = os.path.join(root, "target", "debug", lib_fname)
+lib_path = os.path.join(root, "target", "release", lib_fname)
 print(">>> Library path:", lib_path, "exists?", os.path.exists(lib_path))
 if not os.path.exists(lib_path):
     raise FileNotFoundError(f"Bibliothèque introuvable : {lib_path}")
